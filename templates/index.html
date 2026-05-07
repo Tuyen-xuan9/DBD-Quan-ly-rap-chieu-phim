@@ -1,0 +1,401 @@
+{% extends "base.html" %}
+{% block title %}Phim Đang Chiếu{% endblock %}
+
+{% block head %}
+<style>
+    /* ── HERO ── */
+    .hero {
+        position: relative;
+        padding: 5rem 0 3.5rem;
+        overflow: hidden;
+    }
+
+    .hero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse 70% 60% at 50% 0%, rgba(201, 168, 76, 0.08) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    .hero-label {
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--gold);
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+    }
+
+    .hero-label::before {
+        content: '';
+        display: inline-block;
+        width: 28px;
+        height: 1px;
+        background: var(--gold);
+    }
+
+    .hero-title {
+        font-family: 'Playfair Display', serif;
+        font-size: clamp(2.4rem, 5vw, 4rem);
+        line-height: 1.1;
+        color: var(--text);
+        margin-bottom: 0.5rem;
+    }
+
+    .hero-title em {
+        color: var(--gold);
+        font-style: italic;
+    }
+
+    .hero-sub {
+        color: var(--text-muted);
+        font-size: 1rem;
+        max-width: 480px;
+    }
+
+    .movie-poster img {
+        transition: transform 0.5s ease;
+    }
+
+    .movie-card:hover .movie-poster img {
+        transform: scale(1.1);
+        /* Hiệu ứng phóng to nhẹ khi di chuột vào */
+    }
+
+    /* ── FILTER BAR ── */
+    .filter-bar {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 2.5rem;
+        display: flex;
+        gap: 1rem;
+        align-items: flex-end;
+        flex-wrap: wrap;
+    }
+
+    .filter-bar .form-group {
+        margin-bottom: 0;
+        flex: 1;
+        min-width: 160px;
+    }
+
+    .search-wrap {
+        flex: 2;
+        min-width: 220px;
+        position: relative;
+    }
+
+    .search-wrap input {
+        padding-left: 2.5rem;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 0.8rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-dim);
+        font-size: 0.9rem;
+        pointer-events: none;
+    }
+
+    /* ── MOVIE GRID ── */
+    .movies-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+
+    .movie-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+        position: relative;
+    }
+
+    .movie-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--gold-dim);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(201, 168, 76, 0.1);
+    }
+
+    /* Poster placeholder thay vì ảnh thật */
+    .movie-poster {
+        aspect-ratio: 2/3;
+        background: var(--bg2);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .poster-icon {
+        font-size: 2.5rem;
+        opacity: 0.2;
+    }
+
+    .poster-label {
+        font-family: 'Playfair Display', serif;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        text-align: center;
+        padding: 0 1rem;
+        opacity: 0.6;
+        line-height: 1.4;
+    }
+
+    .poster-genre-tag {
+        position: absolute;
+        top: 0.75rem;
+        left: 0.75rem;
+        background: rgba(0, 0, 0, 0.7);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 0.2rem 0.5rem;
+        font-size: 0.68rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        backdrop-filter: blur(4px);
+    }
+
+    /* Màu theo xếp hạng */
+    .rating-P {
+        background: rgba(39, 174, 96, 0.18);
+        color: #2ecc71;
+        border-color: rgba(39, 174, 96, 0.35);
+    }
+
+    .rating-C13 {
+        background: rgba(41, 128, 185, 0.18);
+        color: #3498db;
+        border-color: rgba(41, 128, 185, 0.35);
+    }
+
+    .rating-C16 {
+        background: rgba(243, 156, 18, 0.18);
+        color: #f39c12;
+        border-color: rgba(243, 156, 18, 0.35);
+    }
+
+    .rating-C18 {
+        background: rgba(192, 57, 43, 0.18);
+        color: #e74c3c;
+        border-color: rgba(192, 57, 43, 0.35);
+    }
+
+    .movie-info {
+        padding: 1.1rem 1.1rem 1.3rem;
+    }
+
+    .movie-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1rem;
+        font-weight: 700;
+        color: var(--text);
+        line-height: 1.3;
+        margin-bottom: 0.5rem;
+    }
+
+    .movie-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+        margin-bottom: 0.9rem;
+    }
+
+    .movie-meta span {
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 0.3rem;
+    }
+
+    .movie-meta .sep {
+        color: var(--text-dim);
+    }
+
+    .movie-card-footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding-top: 0.75rem;
+        border-top: 1px solid var(--border);
+    }
+
+    .movie-rating-badge {
+        font-size: 0.7rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        padding: 0.15rem 0.5rem;
+        border-radius: 4px;
+        border: 1px solid;
+    }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+        text-align: center;
+        padding: 5rem 2rem;
+        color: var(--text-muted);
+    }
+
+    .empty-state-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.3;
+    }
+
+    .empty-state h3 {
+        font-family: 'Playfair Display', serif;
+        color: var(--text-dim);
+        margin-bottom: 0.5rem;
+    }
+
+    /* ── STATS ROW ── */
+    .stats-row {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+
+    .stats-row .count {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+
+    .stats-row .count strong {
+        color: var(--gold);
+    }
+
+    @media (max-width: 600px) {
+        .movies-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+
+        .filter-bar {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- HERO -->
+<div class="hero">
+    <div class="container">
+        <div class="hero-label">CineMax — Hệ thống quản lý rạp chiếu phim</div>
+        <h1 class="hero-title">Phim <em>Đang & Sắp</em><br>Chiếu</h1>
+        <p class="hero-sub">Chọn phim yêu thích, đặt vé ngay — trải nghiệm điện ảnh đỉnh cao.</p>
+    </div>
+</div>
+
+<div class="container">
+    <!-- FILTER BAR -->
+    <form class="filter-bar" method="GET" action="/">
+        <div class="form-group search-wrap">
+            <label class="form-label">Tìm kiếm</label>
+            <span class="search-icon">🔍</span>
+            <input class="form-control" type="text" name="q" placeholder="Tên phim..." value="{{ search }}">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Thể loại</label>
+            <select class="form-control" name="theloai">
+                <option value="">Tất cả</option>
+                {% for g in genres %}
+                <option value="{{ g.TheLoai }}" {% if selected_genre==g.TheLoai %}selected{% endif %}>
+                    {{ g.TheLoai }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Xếp hạng</label>
+            <select class="form-control" name="xepHang">
+                <option value="">Tất cả</option>
+                {% for r in ['P','C13','C16','C18'] %}
+                <option value="{{ r }}" {% if selected_rating==r %}selected{% endif %}>{{ r }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit" class="btn btn-gold" style="align-self:flex-end; margin-bottom:0;">
+            Lọc
+        </button>
+        {% if search or selected_genre or selected_rating %}
+        <a href="/" class="btn btn-ghost" style="align-self:flex-end; margin-bottom:0;">
+            Xóa lọc
+        </a>
+        {% endif %}
+    </form>
+
+    <!-- STATS -->
+    <div class="stats-row">
+        <p class="count">Tìm thấy <strong>{{ phims|length }}</strong> phim</p>
+    </div>
+
+    <!-- MOVIE GRID -->
+    {% if phims %}
+    <div class="movies-grid">
+        {% for phim in phims %}
+        <div class="movie-card">
+            <div class="movie-poster">
+                {% if phim.LinkAnh %}
+                <img src="{{ phim.LinkAnh }}" alt="{{ phim.TenPhim }}"
+                    style="width:100%; height:100%; object-fit:cover;">
+                {% else %}
+                <div class="poster-icon">🎬</div>
+                {% endif %}
+                <div class="poster-genre-tag">{{ phim.TheLoai or 'Phim' }}</div>
+            </div>
+
+            <div class="movie-info">
+                <div class="movie-title">{{ phim.TenPhim }}</div>
+
+                <div class="movie-meta">
+                    <span>⏱ {{ phim.ThoiLuong or '—' }} phút</span>
+                    <span class="sep">·</span>
+                    <span>🌏 {{ phim.NuocSanXuat or '—' }}</span>
+                </div>
+                <div class="movie-meta" style="margin-bottom:0;">
+                    <span>🎬 {{ phim.DaoDien or '—' }}</span>
+                </div>
+
+                <div class="movie-card-footer">
+                    <span class="movie-rating-badge rating-{{ phim.XepHang or 'P' }}">
+                        {{ phim.XepHang or 'P' }}
+                    </span>
+                    <a href="{{ url_for('movie_detail', ma_phim=phim.MaPhim) }}" class="btn btn-gold btn-sm">Xem →</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="empty-state">
+        <div class="empty-state-icon">🎭</div>
+        <h3>Không tìm thấy phim</h3>
+        <p>Thử thay đổi bộ lọc hoặc <a href="/" style="color:var(--gold)">xem tất cả phim</a>.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,489 @@
+{% extends "base.html" %}
+{% block title %}Quản lý Phim{% endblock %}
+
+{% block head %}
+<style>
+    .admin-page {
+        padding: 2.5rem 0 4rem;
+    }
+
+    .admin-header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 2.5rem;
+    }
+
+    .admin-eyebrow {
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--gold);
+        margin-bottom: 0.4rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .admin-eyebrow::before {
+        content: '';
+        display: inline-block;
+        width: 20px;
+        height: 1px;
+        background: var(--gold);
+    }
+
+    .admin-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.2rem;
+        color: var(--text);
+        line-height: 1.1;
+    }
+
+    .admin-title em {
+        color: var(--gold);
+        font-style: italic;
+    }
+
+    /* BACK LINK */
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 0.82rem;
+        margin-bottom: 1.75rem;
+        transition: color .18s;
+    }
+
+    .back-link:hover {
+        color: var(--gold);
+    }
+
+    /* SEARCH BAR */
+    .search-bar {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .search-bar .form-group {
+        margin: 0;
+        flex: 1;
+        min-width: 180px;
+    }
+
+    .search-input-wrap {
+        position: relative;
+    }
+
+    .search-input-wrap input {
+        padding-left: 2.4rem;
+    }
+
+    .s-icon {
+        position: absolute;
+        left: 0.8rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-dim);
+        font-size: 0.85rem;
+        pointer-events: none;
+    }
+
+    /* RATING COLORS in table */
+    .r-P {
+        color: #2ecc71;
+    }
+
+    .r-C13 {
+        color: #3498db;
+    }
+
+    .r-C16 {
+        color: #f39c12;
+    }
+
+    .r-C18 {
+        color: #e74c3c;
+    }
+
+    /* ACTION BUTTONS in row */
+    .row-actions {
+        display: flex;
+        gap: 0.4rem;
+    }
+
+    /* EMPTY STATE */
+    .empty-state {
+        text-align: center;
+        padding: 4rem;
+        color: var(--text-muted);
+    }
+
+    .empty-state-icon {
+        font-size: 2.5rem;
+        opacity: .3;
+        margin-bottom: .75rem;
+    }
+
+    /* MODAL FORM */
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    /* CONFIRM DELETE DIALOG */
+    .delete-dialog {
+        max-width: 380px;
+        text-align: center;
+    }
+
+    .delete-dialog .modal-title {
+        font-size: 1.2rem;
+        margin-bottom: .75rem;
+        color: var(--red);
+    }
+
+    .delete-warning {
+        font-size: .85rem;
+        color: var(--text-muted);
+        margin-bottom: 1.5rem;
+        line-height: 1.6;
+    }
+
+    .delete-dialog .modal-actions {
+        justify-content: center;
+    }
+
+    @media (max-width: 640px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .row-actions {
+            flex-wrap: wrap;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container admin-page">
+
+    <a href="{{ url_for('admin_dashboard') }}" class="back-link">← Dashboard</a>
+
+    <!-- HEADER -->
+    <div class="admin-header">
+        <div>
+            <div class="admin-eyebrow">Quản trị hệ thống</div>
+            <h1 class="admin-title">Quản lý <em>Phim</em></h1>
+        </div>
+        <button class="btn btn-gold" onclick="openAddModal()">+ Thêm phim mới</button>
+    </div>
+
+    <!-- SEARCH / FILTER BAR -->
+    <div class="search-bar">
+        <div class="form-group" style="flex:2;">
+            <div class="search-input-wrap">
+                <span class="s-icon">🔍</span>
+                <input class="form-control" type="text" id="searchInput" placeholder="Tìm tên phim, đạo diễn...">
+            </div>
+        </div>
+        <div class="form-group">
+            <select class="form-control" id="filterRating">
+                <option value="">Tất cả xếp hạng</option>
+                <option value="P">P</option>
+                <option value="C13">C13</option>
+                <option value="C16">C16</option>
+                <option value="C18">C18</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <select class="form-control" id="filterGenre">
+                <option value="">Tất cả thể loại</option>
+                {% for phim in phims %}
+                <option value="{{ phim.TheLoai }}">{{ phim.TheLoai }}</option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="card">
+        <div class="table-wrap">
+            <table id="movieTable">
+                <thead>
+                    <tr>
+                        <th style="width:50px;">ID</th>
+                        <th>Tên phim</th>
+                        <th>Thể loại</th>
+                        <th>Đạo diễn</th>
+                        <th>Thời lượng</th>
+                        <th>Khởi chiếu</th>
+                        <th>Quốc gia</th>
+                        <th>PG</th>
+                        <th style="width:130px;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for phim in phims %}
+                    <tr class="movie-row" data-name="{{ phim.TenPhim | lower }}"
+                        data-director="{{ (phim.DaoDien or '') | lower }}" data-rating="{{ phim.XepHang or '' }}"
+                        data-genre="{{ phim.TheLoai or '' }}">
+                        <td><span class="mono">#{{ phim.MaPhim }}</span></td>
+                        <td>
+                            <div style="font-weight:500; max-width:200px;">{{ phim.TenPhim }}</div>
+                        </td>
+                        <td>
+                            <span class="badge badge-gray" style="font-size:.68rem;">{{ phim.TheLoai or '—' }}</span>
+                        </td>
+                        <td style="color:var(--text-muted); font-size:.85rem;">{{ phim.DaoDien or '—' }}</td>
+                        <td>
+                            <span class="mono" style="font-size:.8rem;">{{ phim.ThoiLuong or '—' }}<span
+                                    style="color:var(--text-dim); font-size:.7rem;"> ph</span></span>
+                        </td>
+                        <td><span class="mono" style="font-size:.78rem;">{{ phim.NgayKhoiChieu or '—' }}</span></td>
+                        <td style="font-size:.83rem; color:var(--text-muted);">{{ phim.NuocSanXuat or '—' }}</td>
+                        <td>
+                            <span class="r-{{ phim.XepHang or 'P' }}"
+                                style="font-weight:700; font-size:.78rem; letter-spacing:.05em;">
+                                {{ phim.XepHang or '—' }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="row-actions">
+                                <button class="btn btn-outline btn-sm" onclick="openEditModal(
+                          {{ phim.MaPhim }},
+                          {{ phim.TenPhim | tojson }},
+                          {{ (phim.TheLoai or '') | tojson }},
+                          {{ phim.ThoiLuong or 0 }},
+                          {{ (phim.DaoDien or '') | tojson }},
+                          {{ (phim.NgayKhoiChieu or '') | tojson }},
+                          {{ (phim.NuocSanXuat or '') | tojson }},
+                          {{ (phim.XepHang or 'P') | tojson }}
+                        )">Sửa</button>
+                                <button class="btn btn-danger btn-sm"
+                                    onclick="openDeleteDialog({{ phim.MaPhim }}, {{ phim.TenPhim | tojson }})">Xóa</button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">🎬</div>
+                                <p>Chưa có phim nào. <button class="btn btn-gold btn-sm" onclick="openAddModal()">Thêm
+                                        phim đầu tiên →</button></p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- COUNT -->
+    <div style="margin-top:1rem; font-size:.8rem; color:var(--text-muted);">
+        Tổng <strong style="color:var(--text);" id="rowCount">{{ phims|length }}</strong> phim
+    </div>
+
+</div>
+
+<!-- ══ ADD MODAL ══ -->
+<div class="modal-overlay" id="addModal">
+    <div class="modal" style="max-width:580px;">
+        <div class="modal-title">Thêm phim mới</div>
+        <form method="POST" action="{{ url_for('admin_add_movie') }}">
+            <div class="form-row">
+                <div class="form-group" style="grid-column:1/-1;">
+                    <label class="form-label">Tên phim <span style="color:var(--red)">*</span></label>
+                    <input class="form-control" name="TenPhim" required placeholder="Nhập tên phim...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Thể loại</label>
+                    <input class="form-control" name="TheLoai" placeholder="Hành động, Tình cảm...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Thời lượng (phút)</label>
+                    <input class="form-control" name="ThoiLuong" type="number" min="1" placeholder="120">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Đạo diễn</label>
+                    <input class="form-control" name="DaoDien" placeholder="Tên đạo diễn">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Ngày khởi chiếu</label>
+                    <input class="form-control" name="NgayKhoiChieu" type="date">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Quốc gia sản xuất</label>
+                    <input class="form-control" name="NuocSanXuat" placeholder="Việt Nam, Mỹ...">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Xếp hạng độ tuổi</label>
+                    <select class="form-control" name="XepHang">
+                        <option value="P">P — Mọi lứa tuổi</option>
+                        <option value="C13">C13 — Từ 13 tuổi</option>
+                        <option value="C16">C16 — Từ 16 tuổi</option>
+                        <option value="C18">C18 — Từ 18 tuổi</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-ghost" onclick="closeModal('addModal')">Hủy</button>
+                <button type="submit" class="btn btn-gold">Thêm phim</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ══ EDIT MODAL ══ -->
+<div class="modal-overlay" id="editModal">
+    <div class="modal" style="max-width:580px;">
+        <div class="modal-title">Chỉnh sửa phim</div>
+        <form method="POST" id="editForm">
+            <div class="form-row">
+                <div class="form-group" style="grid-column:1/-1;">
+                    <label class="form-label">Tên phim <span style="color:var(--red)">*</span></label>
+                    <input class="form-control" name="TenPhim" id="edit_TenPhim" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Thể loại</label>
+                    <input class="form-control" name="TheLoai" id="edit_TheLoai">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Thời lượng (phút)</label>
+                    <input class="form-control" name="ThoiLuong" id="edit_ThoiLuong" type="number" min="1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Đạo diễn</label>
+                    <input class="form-control" name="DaoDien" id="edit_DaoDien">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Ngày khởi chiếu</label>
+                    <input class="form-control" name="NgayKhoiChieu" id="edit_NgayKhoiChieu" type="date">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Quốc gia sản xuất</label>
+                    <input class="form-control" name="NuocSanXuat" id="edit_NuocSanXuat">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Xếp hạng độ tuổi</label>
+                    <select class="form-control" name="XepHang" id="edit_XepHang">
+                        <option value="P">P — Mọi lứa tuổi</option>
+                        <option value="C13">C13 — Từ 13 tuổi</option>
+                        <option value="C16">C16 — Từ 16 tuổi</option>
+                        <option value="C18">C18 — Từ 18 tuổi</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-ghost" onclick="closeModal('editModal')">Hủy</button>
+                <button type="submit" class="btn btn-gold">Lưu thay đổi</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ══ DELETE CONFIRM ══ -->
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal delete-dialog">
+        <div style="font-size:2.5rem; margin-bottom:.75rem;">🗑️</div>
+        <div class="modal-title">Xóa phim?</div>
+        <div class="delete-warning">
+            Bạn có chắc muốn xóa phim<br>
+            <strong id="deleteMovieName" style="color:var(--text);"></strong>?<br>
+            <span style="font-size:.78rem; opacity:.6;">Hành động này không thể hoàn tác. Phim không thể xóa nếu đã có
+                suất chiếu.</span>
+        </div>
+        <form method="POST" id="deleteForm">
+            <div class="modal-actions">
+                <button type="button" class="btn btn-ghost" onclick="closeModal('deleteModal')">Hủy</button>
+                <button type="submit" class="btn btn-danger">Xác nhận xóa</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="form-group">
+    <label>Link hình ảnh Poster</label>
+    <input type="text" name="LinkAnh" placeholder="Dán link ảnh từ Google/TMDB vào đây..." required>
+</div>
+
+<script>
+    /* ── MODALS ── */
+    function openAddModal() {
+        document.getElementById('addModal').classList.add('active');
+    }
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('active');
+    }
+    document.querySelectorAll('.modal-overlay').forEach(o => {
+        o.addEventListener('click', e => {
+            if (e.target === o) o.classList.remove('active');
+        });
+    });
+
+    function openEditModal(id, tenPhim, theLoai, thoiLuong, daoDien, ngayKC, nuoc, xepHang) {
+        document.getElementById('editForm').action = `/admin/phim/sua/${id}`;
+        document.getElementById('edit_TenPhim').value = tenPhim;
+        document.getElementById('edit_TheLoai').value = theLoai;
+        document.getElementById('edit_ThoiLuong').value = thoiLuong || '';
+        document.getElementById('edit_DaoDien').value = daoDien;
+        document.getElementById('edit_NgayKhoiChieu').value = ngayKC;
+        document.getElementById('edit_NuocSanXuat').value = nuoc;
+        document.getElementById('edit_XepHang').value = xepHang;
+        document.getElementById('editModal').classList.add('active');
+    }
+
+    function openDeleteDialog(id, name) {
+        document.getElementById('deleteForm').action = `/admin/phim/xoa/${id}`;
+        document.getElementById('deleteMovieName').textContent = name;
+        document.getElementById('deleteModal').classList.add('active');
+    }
+
+    /* ── CLIENT FILTER ── */
+    function filterTable() {
+        const q = document.getElementById('searchInput').value.toLowerCase();
+        const rat = document.getElementById('filterRating').value;
+        const genre = document.getElementById('filterGenre').value;
+        let count = 0;
+
+        document.querySelectorAll('.movie-row').forEach(row => {
+            const nameMatch = !q || row.dataset.name.includes(q) || row.dataset.director.includes(q);
+            const ratMatch = !rat || row.dataset.rating === rat;
+            const genreMatch = !genre || row.dataset.genre === genre;
+            const show = nameMatch && ratMatch && genreMatch;
+            row.style.display = show ? '' : 'none';
+            if (show) count++;
+        });
+        document.getElementById('rowCount').textContent = count;
+    }
+
+    document.getElementById('searchInput').addEventListener('input', filterTable);
+    document.getElementById('filterRating').addEventListener('change', filterTable);
+    document.getElementById('filterGenre').addEventListener('change', filterTable);
+
+    /* Deduplicate genre dropdown */
+    const genreSelect = document.getElementById('filterGenre');
+    const seen = new Set();
+    [...genreSelect.options].forEach(opt => {
+        if (!opt.value) return;
+        if (seen.has(opt.value)) opt.remove();
+        else seen.add(opt.value);
+    });
+</script>
+{% endblock %}

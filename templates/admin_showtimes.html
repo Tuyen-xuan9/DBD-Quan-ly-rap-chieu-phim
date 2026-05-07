@@ -1,0 +1,633 @@
+{% extends "base.html" %}
+{% block title %}Quản lý Suất chiếu{% endblock %}
+
+{% block head %}
+<style>
+    .admin-page {
+        padding: 2.5rem 0 4rem;
+    }
+
+    .admin-header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 2.5rem;
+    }
+
+    .admin-eyebrow {
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--gold);
+        margin-bottom: 0.4rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .admin-eyebrow::before {
+        content: '';
+        display: inline-block;
+        width: 20px;
+        height: 1px;
+        background: var(--gold);
+    }
+
+    .admin-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 2.2rem;
+        color: var(--text);
+        line-height: 1.1;
+    }
+
+    .admin-title em {
+        color: var(--gold);
+        font-style: italic;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 0.82rem;
+        margin-bottom: 1.75rem;
+        transition: color .18s;
+    }
+
+    .back-link:hover {
+        color: var(--gold);
+    }
+
+    /* ── FILTER BAR ── */
+    .filter-bar {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: flex-end;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+
+    .filter-bar .form-group {
+        margin: 0;
+        flex: 1;
+        min-width: 160px;
+    }
+
+    /* ── STATUS PILLS ── */
+    .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.22rem 0.65rem;
+        border-radius: 100px;
+        font-size: 0.68rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        border: 1px solid;
+        white-space: nowrap;
+    }
+
+    .pill-dot {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: currentColor;
+    }
+
+    .pill-sap {
+        background: rgba(41, 128, 185, 0.1);
+        color: #3498db;
+        border-color: rgba(41, 128, 185, 0.3);
+    }
+
+    .pill-dang {
+        background: rgba(39, 174, 96, 0.1);
+        color: #2ecc71;
+        border-color: rgba(39, 174, 96, 0.3);
+    }
+
+    .pill-da {
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text-dim);
+        border-color: var(--border);
+    }
+
+    /* ── ROOM TYPE ── */
+    .type-tag {
+        display: inline-block;
+        padding: 0.15rem 0.5rem;
+        border-radius: 4px;
+        font-size: 0.68rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        border: 1px solid;
+    }
+
+    .type-2d {
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text-muted);
+        border-color: var(--border);
+    }
+
+    .type-3d {
+        background: rgba(41, 128, 185, 0.1);
+        color: #3498db;
+        border-color: rgba(41, 128, 185, 0.3);
+    }
+
+    .type-imax {
+        background: rgba(201, 168, 76, 0.12);
+        color: var(--gold);
+        border-color: rgba(201, 168, 76, 0.3);
+    }
+
+    /* ── PRICE MONO ── */
+    .price-mono {
+        font-family: 'DM Mono', monospace;
+        font-size: 0.85rem;
+        color: var(--gold);
+    }
+
+    /* ── ROW ACTIONS ── */
+    .row-actions {
+        display: flex;
+        gap: 0.4rem;
+        align-items: center;
+    }
+
+    /* ── STATUS SELECT (inline) ── */
+    .status-select {
+        background: transparent;
+        border: none;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.72rem;
+        color: var(--text-muted);
+        cursor: pointer;
+        outline: none;
+        padding: 0.2rem 0.3rem;
+    }
+
+    .status-select:hover {
+        color: var(--gold);
+    }
+
+    /* ── SOLD COUNT MINI BAR ── */
+    .sold-bar-wrap {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        min-width: 80px;
+    }
+
+    .sold-bar-track {
+        flex: 1;
+        height: 4px;
+        background: var(--bg2);
+        border-radius: 2px;
+        overflow: hidden;
+    }
+
+    .sold-bar-fill {
+        height: 100%;
+        background: var(--gold);
+        border-radius: 2px;
+        transition: width 0.3s;
+    }
+
+    .sold-count {
+        font-family: 'DM Mono', monospace;
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        white-space: nowrap;
+    }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        color: var(--text-muted);
+    }
+
+    .empty-state-icon {
+        font-size: 2.5rem;
+        opacity: .3;
+        margin-bottom: .75rem;
+    }
+
+    /* ── MODAL FORM ── */
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    /* DELETE DIALOG */
+    .delete-dialog {
+        max-width: 380px;
+        text-align: center;
+    }
+
+    .delete-dialog .modal-title {
+        font-size: 1.2rem;
+        color: var(--red);
+        margin-bottom: .75rem;
+    }
+
+    .delete-warning {
+        font-size: .85rem;
+        color: var(--text-muted);
+        margin-bottom: 1.5rem;
+        line-height: 1.6;
+    }
+
+    /* ── DATE GROUP HEADER ── */
+    .date-group-hd {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.6rem 1rem;
+        background: var(--bg2);
+        border-bottom: 1px solid var(--border);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--gold);
+    }
+
+    /* SUMMARY ROW at bottom */
+    .table-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        padding: 0.9rem 1rem;
+        background: var(--bg2);
+        border-top: 1px solid var(--border);
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        gap: 0.5rem;
+    }
+
+    .table-footer strong {
+        color: var(--text);
+    }
+
+    @media (max-width: 900px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+
+        .filter-bar {
+            flex-direction: column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container admin-page">
+
+    <a href="{{ url_for('admin_dashboard') }}" class="back-link">← Dashboard</a>
+
+    <!-- HEADER -->
+    <div class="admin-header">
+        <div>
+            <div class="admin-eyebrow">Quản trị hệ thống</div>
+            <h1 class="admin-title">Quản lý <em>Suất chiếu</em></h1>
+        </div>
+        <button class="btn btn-gold" onclick="openAddModal()">+ Thêm suất chiếu</button>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+        <div class="form-group" style="flex:2;">
+            <label class="form-label">Tìm phim</label>
+            <input class="form-control" type="text" id="searchInput" placeholder="Tên phim...">
+        </div>
+        <div class="form-group">
+            <label class="form-label">Trạng thái</label>
+            <select class="form-control" id="filterStatus">
+                <option value="">Tất cả</option>
+                <option value="Sap chieu">Sắp chiếu</option>
+                <option value="Dang chieu">Đang chiếu</option>
+                <option value="Da chieu">Đã chiếu</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Loại phòng</label>
+            <select class="form-control" id="filterType">
+                <option value="">Tất cả</option>
+                <option value="2D">2D</option>
+                <option value="3D">3D</option>
+                <option value="IMAX">IMAX</option>
+            </select>
+        </div>
+        <button class="btn btn-ghost" style="align-self:flex-end;" onclick="clearFilters()">Xóa lọc</button>
+    </div>
+
+    <!-- TABLE -->
+    <div class="card">
+        <div class="table-wrap">
+            <table id="showtimeTable">
+                <thead>
+                    <tr>
+                        <th style="width:50px;">#</th>
+                        <th>Phim</th>
+                        <th>Rạp · Phòng</th>
+                        <th>Loại</th>
+                        <th>Ngày chiếu</th>
+                        <th>Giờ</th>
+                        <th>Giá vé</th>
+                        <th>Vé bán</th>
+                        <th>Trạng thái</th>
+                        <th style="width:110px;">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sc in suats %}
+                    <tr class="st-row" data-film="{{ sc.TenPhim | lower }}" data-status="{{ sc.TrangThai }}"
+                        data-type="{{ sc.LoaiPhong }}">
+                        <td><span class="mono">#{{ sc.MaSuat }}</span></td>
+                        <td>
+                            <div
+                                style="font-weight:500; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:.88rem;">
+                                {{ sc.TenPhim }}</div>
+                        </td>
+                        <td>
+                            <div style="font-size:.85rem; color:var(--text);">{{ sc.TenRap }}</div>
+                            <div style="font-size:.73rem; color:var(--text-muted); margin-top:.15rem;">{{ sc.TenPhong }}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="type-tag type-{{ sc.LoaiPhong | lower }}">{{ sc.LoaiPhong }}</span>
+                        </td>
+                        <td>
+                            <span class="mono" style="font-size:.8rem;">{{ sc.NgayChieu }}</span>
+                        </td>
+                        <td>
+                            <span class="mono" style="font-size:.88rem; color:var(--text);">{{ sc.GioChieu }}</span>
+                        </td>
+                        <td>
+                            <span class="price-mono">{{ '{:,.0f}'.format(sc.GiaVe) }}đ</span>
+                        </td>
+                        <td>
+                            <div class="sold-bar-wrap">
+                                <div class="sold-bar-track">
+                                    {% set pct = (sc.SoVeDaBan / 50 * 100) | int if sc.SoVeDaBan else 0 %}
+                                    <div class="sold-bar-fill" style="width:{{ [pct, 100] | min }}%"></div>
+                                </div>
+                                <span class="sold-count">{{ sc.SoVeDaBan }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            {% if sc.TrangThai == 'Sap chieu' %}
+                            <span class="pill pill-sap"><span class="pill-dot"></span>Sắp chiếu</span>
+                            {% elif sc.TrangThai == 'Dang chieu' %}
+                            <span class="pill pill-dang"><span class="pill-dot"></span>Đang chiếu</span>
+                            {% else %}
+                            <span class="pill pill-da"><span class="pill-dot"></span>Đã chiếu</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="row-actions">
+                                <button class="btn btn-outline btn-sm"
+                                    onclick="openStatusModal({{ sc.MaSuat }}, '{{ sc.TrangThai }}', {{ sc.TenPhim | tojson }})">
+                                    ✎
+                                </button>
+                                <button class="btn btn-danger btn-sm"
+                                    onclick="openDeleteDialog({{ sc.MaSuat }}, {{ sc.TenPhim | tojson }}, '{{ sc.NgayChieu }}', '{{ sc.GioChieu }}')">
+                                    🗑
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="10">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">📅</div>
+                                <p>Chưa có suất chiếu nào. <button class="btn btn-gold btn-sm"
+                                        onclick="openAddModal()">Thêm ngay →</button></p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if suats %}
+        <div class="table-footer">
+            <span>Tổng <strong id="rowCount">{{ suats | length }}</strong> suất chiếu</span>
+            <span>
+                Sắp chiếu:
+                <strong style="color:#3498db;">{{ suats | selectattr('TrangThai','eq','Sap chieu') | list | length
+                    }}</strong>
+                &nbsp;·&nbsp;
+                Đang chiếu:
+                <strong style="color:#2ecc71;">{{ suats | selectattr('TrangThai','eq','Dang chieu') | list | length
+                    }}</strong>
+                &nbsp;·&nbsp;
+                Đã chiếu:
+                <strong>{{ suats | selectattr('TrangThai','eq','Da chieu') | list | length }}</strong>
+            </span>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- ══ ADD MODAL ══ -->
+<div class="modal-overlay" id="addModal">
+    <div class="modal" style="max-width:560px;">
+        <div class="modal-title">Thêm suất chiếu</div>
+        <form method="POST" action="{{ url_for('admin_add_showtime') }}">
+            <div class="form-row">
+                <div class="form-group" style="grid-column:1/-1;">
+                    <label class="form-label">Phim <span style="color:var(--red)">*</span></label>
+                    <select class="form-control" name="MaPhim" required>
+                        <option value="">— Chọn phim —</option>
+                        {% for p in phims %}
+                        <option value="{{ p.MaPhim }}">{{ p.TenPhim }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group" style="grid-column:1/-1;">
+                    <label class="form-label">Phòng chiếu <span style="color:var(--red)">*</span></label>
+                    <select class="form-control" name="MaPhong" required>
+                        <option value="">— Chọn phòng —</option>
+                        {% for ph in phongs %}
+                        <option value="{{ ph.MaPhong }}">{{ ph.TenRap }} — {{ ph.TenPhong }} ({{ ph.LoaiPhong }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Ngày chiếu <span style="color:var(--red)">*</span></label>
+                    <input class="form-control" name="NgayChieu" type="date" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Giờ chiếu <span style="color:var(--red)">*</span></label>
+                    <input class="form-control" name="GioChieu" type="time" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Giá vé (VNĐ) <span style="color:var(--red)">*</span></label>
+                    <input class="form-control" name="GiaVe" type="number" min="1000" step="1000" placeholder="90000"
+                        required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Trạng thái</label>
+                    <select class="form-control" name="TrangThai">
+                        <option value="Sap chieu">Sắp chiếu</option>
+                        <option value="Dang chieu">Đang chiếu</option>
+                        <option value="Da chieu">Đã chiếu</option>
+                    </select>
+                </div>
+            </div>
+            <div
+                style="background:rgba(201,168,76,0.06); border:1px solid rgba(201,168,76,0.2); border-radius:var(--radius); padding:.75rem 1rem; margin-bottom:1.25rem; font-size:.78rem; color:var(--text-muted);">
+                ⚠️ Hệ thống sẽ báo lỗi nếu phòng đã có suất chiếu cùng ngày giờ.
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-ghost" onclick="closeModal('addModal')">Hủy</button>
+                <button type="submit" class="btn btn-gold">Thêm suất chiếu</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ══ CHANGE STATUS MODAL ══ -->
+<div class="modal-overlay" id="statusModal">
+    <div class="modal" style="max-width:400px;">
+        <div class="modal-title">Đổi trạng thái suất chiếu</div>
+        <div style="font-size:.85rem; color:var(--text-muted); margin-bottom:1.25rem;" id="statusModalDesc">—</div>
+        <div class="form-group">
+            <label class="form-label">Trạng thái mới</label>
+            <select class="form-control" id="statusSelectInput">
+                <option value="Sap chieu">Sắp chiếu</option>
+                <option value="Dang chieu">Đang chiếu</option>
+                <option value="Da chieu">Đã chiếu</option>
+            </select>
+        </div>
+        <div class="modal-actions">
+            <button type="button" class="btn btn-ghost" onclick="closeModal('statusModal')">Hủy</button>
+            <button type="button" class="btn btn-gold" id="btnSaveStatus" onclick="saveStatus()">Lưu</button>
+        </div>
+    </div>
+</div>
+
+<!-- ══ DELETE CONFIRM ══ -->
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal delete-dialog">
+        <div style="font-size:2.5rem; margin-bottom:.75rem;">🗑️</div>
+        <div class="modal-title">Xóa suất chiếu?</div>
+        <div class="delete-warning">
+            Xóa suất chiếu của phim<br>
+            <strong id="deleteShowtimeName" style="color:var(--text);"></strong><br>
+            <span id="deleteShowtimeTime"
+                style="font-family:'DM Mono',monospace; font-size:.82rem; color:var(--gold);"></span><br>
+            <span style="font-size:.75rem; opacity:.6; display:block; margin-top:.5rem;">
+                Hành động này không thể hoàn tác. Suất chiếu đã có vé sẽ không thể xóa.
+            </span>
+        </div>
+        <form method="POST" id="deleteForm">
+            <div class="modal-actions">
+                <button type="button" class="btn btn-ghost" onclick="closeModal('deleteModal')">Hủy</button>
+                <button type="submit" class="btn btn-danger">Xác nhận xóa</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    /* ── MODALS ── */
+    function openAddModal() {
+        document.getElementById('addModal').classList.add('active');
+    }
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('active');
+    }
+    document.querySelectorAll('.modal-overlay').forEach(o => {
+        o.addEventListener('click', e => {
+            if (e.target === o) o.classList.remove('active');
+        });
+    });
+
+    /* ── STATUS MODAL ── */
+    let _statusSuatId = null;
+    function openStatusModal(suatId, currentStatus, tenPhim) {
+        _statusSuatId = suatId;
+        document.getElementById('statusModalDesc').textContent = `Phim: ${tenPhim}`;
+        document.getElementById('statusSelectInput').value = currentStatus;
+        document.getElementById('statusModal').classList.add('active');
+    }
+    async function saveStatus() {
+        if (!_statusSuatId) return;
+        const newStatus = document.getElementById('statusSelectInput').value;
+        const fd = new FormData();
+        fd.append('trang_thai', newStatus);
+        try {
+            const res = await fetch(`/admin/suat-chieu/doi-trang-thai/${_statusSuatId}`, {
+                method: 'POST', body: fd
+            });
+            const data = await res.json();
+            if (data.ok) {
+                closeModal('statusModal');
+                location.reload();
+            }
+        } catch (e) {
+            alert('Lỗi khi cập nhật trạng thái.');
+        }
+    }
+
+    /* ── DELETE ── */
+    function openDeleteDialog(suatId, tenPhim, ngay, gio) {
+        document.getElementById('deleteForm').action = `/admin/suat-chieu/xoa/${suatId}`;
+        document.getElementById('deleteShowtimeName').textContent = tenPhim;
+        document.getElementById('deleteShowtimeTime').textContent = `${ngay} lúc ${gio}`;
+        document.getElementById('deleteModal').classList.add('active');
+    }
+
+    /* ── CLIENT FILTER ── */
+    function filterTable() {
+        const q = document.getElementById('searchInput').value.toLowerCase();
+        const status = document.getElementById('filterStatus').value;
+        const type = document.getElementById('filterType').value;
+        let count = 0;
+
+        document.querySelectorAll('.st-row').forEach(row => {
+            const filmOk = !q || row.dataset.film.includes(q);
+            const statusOk = !status || row.dataset.status === status;
+            const typeOk = !type || row.dataset.type === type;
+            const show = filmOk && statusOk && typeOk;
+            row.style.display = show ? '' : 'none';
+            if (show) count++;
+        });
+
+        const el = document.getElementById('rowCount');
+        if (el) el.textContent = count;
+    }
+
+    function clearFilters() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('filterStatus').value = '';
+        document.getElementById('filterType').value = '';
+        filterTable();
+    }
+
+    document.getElementById('searchInput').addEventListener('input', filterTable);
+    document.getElementById('filterStatus').addEventListener('change', filterTable);
+    document.getElementById('filterType').addEventListener('change', filterTable);
+</script>
+{% endblock %}

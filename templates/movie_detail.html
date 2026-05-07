@@ -1,0 +1,353 @@
+{% extends "base.html" %}
+{% block title %}{{ phim.TenPhim }}{% endblock %}
+
+{% block head %}
+<style>
+    .detail-hero {
+        padding: 3.5rem 0 2.5rem;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .detail-hero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse 60% 80% at 0% 50%, rgba(201, 168, 76, 0.06) 0%, transparent 60%);
+        pointer-events: none;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 0.82rem;
+        letter-spacing: 0.04em;
+        margin-bottom: 2rem;
+        transition: color 0.18s;
+    }
+
+    .back-link:hover {
+        color: var(--gold);
+    }
+
+    /* ── MOVIE DETAIL LAYOUT ── */
+    .movie-detail-layout {
+        display: grid;
+        grid-template-columns: 240px 1fr;
+        gap: 3rem;
+        align-items: start;
+    }
+
+    .movie-poster-lg {
+        aspect-ratio: 2/3;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 0.75rem;
+        position: sticky;
+        top: 80px;
+    }
+
+    .poster-icon-lg {
+        font-size: 3.5rem;
+        opacity: 0.15;
+    }
+
+    .poster-label-lg {
+        font-family: 'Playfair Display', serif;
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        opacity: 0.5;
+        text-align: center;
+        padding: 0 1.5rem;
+        line-height: 1.4;
+    }
+
+    /* ── INFO PANEL ── */
+    .movie-info-panel {}
+
+    .movie-badges {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+    }
+
+    .movie-main-title {
+        font-family: 'Playfair Display', serif;
+        font-size: clamp(1.8rem, 4vw, 2.8rem);
+        line-height: 1.15;
+        color: var(--text);
+        margin-bottom: 1.5rem;
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+        margin-bottom: 2rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+    }
+
+    .info-item {
+        padding: 0.9rem 1.1rem;
+        border-bottom: 1px solid var(--border);
+        border-right: 1px solid var(--border);
+    }
+
+    .info-item:nth-child(even) {
+        border-right: none;
+    }
+
+    .info-item:nth-last-child(-n+2) {
+        border-bottom: none;
+    }
+
+    .info-key {
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 0.3rem;
+    }
+
+    .info-val {
+        font-size: 0.9rem;
+        color: var(--text);
+        font-family: 'DM Sans', sans-serif;
+    }
+
+    .section-title {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.4rem;
+        color: var(--text);
+        margin-bottom: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .section-title::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--border);
+    }
+
+    /* ── SHOWTIME CARDS ── */
+    .showtime-group {
+        margin-bottom: 2rem;
+    }
+
+    .showtime-date {
+        font-size: 0.75rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--gold);
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .showtime-date::before {
+        content: '▸';
+    }
+
+    .showtime-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .showtime-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 0.9rem 1.1rem;
+        min-width: 180px;
+        transition: border-color 0.18s, background 0.18s;
+        text-decoration: none;
+        display: block;
+    }
+
+    .showtime-card:hover {
+        border-color: var(--gold-dim);
+        background: rgba(201, 168, 76, 0.05);
+    }
+
+    .showtime-time {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.6rem;
+        color: var(--text);
+        margin-bottom: 0.4rem;
+        line-height: 1;
+    }
+
+    .showtime-room {
+        font-size: 0.78rem;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+    }
+
+    .showtime-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 0.5rem;
+        border-top: 1px solid var(--border);
+    }
+
+    .showtime-price {
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--gold);
+        font-family: 'DM Mono', monospace;
+    }
+
+    .showtime-type {
+        font-size: 0.68rem;
+    }
+
+    .no-showtime {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        padding: 2.5rem;
+        text-align: center;
+        color: var(--text-muted);
+    }
+
+    .no-showtime p {
+        font-size: 0.9rem;
+        margin-top: 0.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .movie-detail-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .movie-poster-lg {
+            position: static;
+            aspect-ratio: 16/9;
+        }
+
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .info-item {
+            border-right: none !important;
+        }
+
+        .info-item:last-child {
+            border-bottom: none !important;
+        }
+
+        .info-item:nth-last-child(2) {
+            border-bottom: 1px solid var(--border) !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detail-hero">
+    <div class="container">
+        <a href="{{ url_for('index') }}" class="back-link">← Quay lại danh sách phim</a>
+
+        <div class="movie-detail-layout">
+            <!-- POSTER -->
+            <div>
+                <div class="movie-poster-lg">
+                    {% if phim.LinkAnh %}
+                    <img src="{{ phim.LinkAnh }}" alt="{{ phim.TenPhim }}"
+                        style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius-lg);">
+                    {% else %}
+                    <div class="poster-icon" style="font-size: 4rem;">🎬</div>
+                    {% endif %}
+
+                    <div class="movie-rating-badge rating-{{ phim.XepHang or 'P' }}"
+                        style="position: absolute; top: 1rem; right: 1rem;"></div>
+                    {{ phim.XepHang or 'P' }}
+                </div>
+            </div>
+
+            <!-- INFO -->
+            <div class="movie-info-panel">
+                <div class="movie-badges">
+                    <span class="badge badge-gold">{{ phim.TheLoai or 'Phim' }}</span>
+                    <span
+                        class="badge {% if phim.XepHang == 'P' %}badge-green{% elif phim.XepHang == 'C18' %}badge-red{% elif phim.XepHang == 'C16' %}badge-gold{% else %}badge-blue{% endif %}">
+                        {{ phim.XepHang or 'P' }}
+                    </span>
+                    <span class="badge badge-gray">{{ phim.NuocSanXuat or '—' }}</span>
+                </div>
+
+                <h1 class="movie-main-title">{{ phim.TenPhim }}</h1>
+
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-key">Đạo diễn</div>
+                        <div class="info-val">{{ phim.DaoDien or '—' }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-key">Thời lượng</div>
+                        <div class="info-val">{{ phim.ThoiLuong or '—' }} phút</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-key">Khởi chiếu</div>
+                        <div class="info-val">{{ phim.NgayKhoiChieu or '—' }}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-key">Quốc gia</div>
+                        <div class="info-val">{{ phim.NuocSanXuat or '—' }}</div>
+                    </div>
+                </div>
+
+                <!-- SHOWTIMES -->
+                <h2 class="section-title">Suất chiếu</h2>
+
+                {% if suats %}
+                {% set dates = suats | map(attribute='NgayChieu') | list | unique | list %}
+                {% for date in dates %}
+                <div class="showtime-group">
+                    <div class="showtime-date">{{ date }}</div>
+                    <div class="showtime-list">
+                        {% for sc in suats if sc.NgayChieu == date %}
+                        <a href="{{ url_for('booking', ma_suat=sc.MaSuat) }}" class="showtime-card">
+                            <div class="showtime-time">{{ sc.GioChieu }}</div>
+                            <div class="showtime-room">{{ sc.TenRap }} · {{ sc.TenPhong }}</div>
+                            <div class="showtime-footer">
+                                <span class="showtime-price">{{ '{:,.0f}'.format(sc.GiaVe) }}đ</span>
+                                <span class="badge badge-gray showtime-type">{{ sc.LoaiPhong }}</span>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="no-showtime">
+                    <div style="font-size:2rem;margin-bottom:.5rem;opacity:.3">📅</div>
+                    <strong style="color:var(--text-dim)">Chưa có suất chiếu</strong>
+                    <p>Phim này hiện chưa có suất chiếu sắp diễn ra.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

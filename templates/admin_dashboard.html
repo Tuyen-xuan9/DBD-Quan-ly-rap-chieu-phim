@@ -1,0 +1,425 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block head %}
+<style>
+  /* ── PAGE ── */
+  .admin-page { padding: 2.5rem 0 4rem; }
+
+  .admin-header {
+    display: flex; align-items: flex-end;
+    justify-content: space-between; flex-wrap: wrap;
+    gap: 1rem; margin-bottom: 2.5rem;
+  }
+  .admin-eyebrow {
+    font-size: 0.7rem; font-weight: 600;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 0.4rem;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+  .admin-eyebrow::before {
+    content: ''; display: inline-block;
+    width: 20px; height: 1px; background: var(--gold);
+  }
+  .admin-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.2rem; color: var(--text); line-height: 1.1;
+  }
+  .admin-title em { color: var(--gold); font-style: italic; }
+
+  /* ── KPI CARDS ── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+  }
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.4rem 1.5rem;
+    position: relative; overflow: hidden;
+    transition: border-color .2s, transform .2s;
+  }
+  .kpi-card:hover { border-color: var(--gold-dim); transform: translateY(-2px); }
+  .kpi-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: var(--kpi-color, var(--gold));
+    opacity: 0.6;
+  }
+  .kpi-icon {
+    font-size: 1.6rem; margin-bottom: 0.9rem;
+    display: block; line-height: 1;
+    opacity: 0.8;
+  }
+  .kpi-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem; font-style: italic;
+    color: var(--text); line-height: 1; margin-bottom: 0.3rem;
+  }
+  .kpi-val .unit {
+    font-size: 0.9rem; font-style: normal;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text-muted); margin-left: 0.15rem;
+  }
+  .kpi-label {
+    font-size: 0.72rem; font-weight: 600;
+    letter-spacing: 0.07em; text-transform: uppercase;
+    color: var(--text-muted);
+  }
+  .kpi-gold   { --kpi-color: #c9a84c; }
+  .kpi-green  { --kpi-color: #27ae60; }
+  .kpi-blue   { --kpi-color: #2980b9; }
+  .kpi-red    { --kpi-color: #c0392b; }
+  .kpi-purple { --kpi-color: #8e44ad; }
+
+  /* ── REVENUE HIGHLIGHT ── */
+  .revenue-banner {
+    background: linear-gradient(135deg, rgba(201,168,76,0.12) 0%, rgba(201,168,76,0.04) 100%);
+    border: 1px solid rgba(201,168,76,0.25);
+    border-radius: var(--radius-lg);
+    padding: 2rem 2.5rem;
+    margin-bottom: 2.5rem;
+    display: flex; align-items: center;
+    justify-content: space-between; flex-wrap: wrap; gap: 1.5rem;
+    position: relative; overflow: hidden;
+  }
+  .revenue-banner::after {
+    content: '₫';
+    position: absolute; right: 2rem; top: 50%; transform: translateY(-50%);
+    font-family: 'Playfair Display', serif;
+    font-size: 6rem; font-style: italic;
+    color: rgba(201,168,76,0.06); pointer-events: none;
+    line-height: 1;
+  }
+  .revenue-label {
+    font-size: 0.72rem; font-weight: 600;
+    letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--gold); margin-bottom: 0.5rem;
+  }
+  .revenue-val {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-style: italic; color: var(--text);
+    line-height: 1;
+  }
+  .revenue-val small {
+    font-size: 1.1rem; font-style: normal;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--gold); margin-left: 0.3rem;
+  }
+  .revenue-meta {
+    display: flex; gap: 2rem; flex-wrap: wrap;
+  }
+  .revenue-meta-item { text-align: center; }
+  .revenue-meta-item .val {
+    font-family: 'DM Mono', monospace;
+    font-size: 1.3rem; color: var(--text); display: block;
+  }
+  .revenue-meta-item .lbl {
+    font-size: 0.7rem; color: var(--text-muted);
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+
+  /* ── SECTIONS ── */
+  .dash-grid {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 1.5rem;
+    align-items: start;
+  }
+
+  .section-hd {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem; color: var(--text);
+    margin-bottom: 1.25rem;
+    display: flex; align-items: center; gap: 0.75rem;
+  }
+  .section-hd::after {
+    content: ''; flex: 1; height: 1px;
+    background: var(--border);
+  }
+  .section-hd a {
+    font-size: 0.75rem; font-family: 'DM Sans', sans-serif;
+    color: var(--gold); text-decoration: none;
+    font-style: normal; white-space: nowrap;
+  }
+  .section-hd a:hover { text-decoration: underline; }
+
+  /* ── RECENT TICKETS TABLE ── */
+  .tickets-section { overflow: hidden; }
+  .status-pill {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    padding: 0.2rem 0.6rem; border-radius: 100px;
+    font-size: 0.68rem; font-weight: 600;
+    letter-spacing: 0.05em; text-transform: uppercase;
+    border: 1px solid;
+  }
+  .pill-mua   { background:rgba(39,174,96,0.1);  color:#2ecc71; border-color:rgba(39,174,96,0.3); }
+  .pill-dung  { background:rgba(41,128,185,0.1); color:#3498db; border-color:rgba(41,128,185,0.3); }
+  .pill-huy   { background:rgba(192,57,43,0.1);  color:#e74c3c; border-color:rgba(192,57,43,0.3); }
+  .pill-dot { width:5px; height:5px; border-radius:50%; background:currentColor; }
+
+  /* ── QUICK LINKS ── */
+  .quick-links { display: flex; flex-direction: column; gap: 0.75rem; }
+  .quick-link-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    display: flex; align-items: center;
+    gap: 1rem; text-decoration: none;
+    transition: border-color .18s, background .18s;
+  }
+  .quick-link-card:hover {
+    border-color: var(--gold-dim);
+    background: rgba(201,168,76,0.04);
+  }
+  .ql-icon {
+    width: 40px; height: 40px; border-radius: var(--radius);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; flex-shrink: 0;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+  }
+  .ql-text {}
+  .ql-name {
+    font-size: 0.88rem; font-weight: 500;
+    color: var(--text); display: block;
+  }
+  .ql-desc { font-size: 0.74rem; color: var(--text-muted); }
+
+  /* ── STATUS BREAKDOWN ── */
+  .status-breakdown {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.4rem;
+    margin-bottom: 1rem;
+  }
+  .sb-row {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    padding: 0.55rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 0.84rem;
+  }
+  .sb-row:last-child { border-bottom: none; }
+  .sb-label {
+    display: flex; align-items: center; gap: 0.6rem;
+    color: var(--text-muted);
+  }
+  .sb-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .sb-val { font-family: 'DM Mono', monospace; color: var(--text); }
+
+  @media (max-width: 900px) {
+    .dash-grid { grid-template-columns: 1fr; }
+    .revenue-banner { flex-direction: column; align-items: flex-start; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 480px) {
+    .kpi-grid { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container admin-page">
+
+  <!-- HEADER -->
+  <div class="admin-header">
+    <div>
+      <div class="admin-eyebrow">Quản trị hệ thống</div>
+      <h1 class="admin-title">Tổng quan <em>Dashboard</em></h1>
+    </div>
+    <div style="display:flex; gap:.75rem; flex-wrap:wrap;">
+      <a href="{{ url_for('admin_movies') }}" class="btn btn-outline">🎬 Quản lý phim</a>
+      <a href="{{ url_for('admin_showtimes') }}" class="btn btn-gold">📅 Suất chiếu</a>
+    </div>
+  </div>
+
+  <!-- REVENUE BANNER -->
+  <div class="revenue-banner">
+    <div>
+      <div class="revenue-label">Tổng doanh thu hệ thống</div>
+      <div class="revenue-val">
+        {{ '{:,.0f}'.format(stats.doanh_thu) }}<small>đ</small>
+      </div>
+      <div style="margin-top:.75rem; font-size:.78rem; color:var(--text-muted);">
+        Từ <strong style="color:var(--text);">{{ stats.ve_da_ban }}</strong> vé đã bán thành công
+      </div>
+    </div>
+    <div class="revenue-meta">
+      <div class="revenue-meta-item">
+        <span class="val">{{ stats.ve_da_ban }}</span>
+        <span class="lbl">Vé bán</span>
+      </div>
+      <div class="revenue-meta-item">
+        <span class="val">{{ stats.ve_da_huy }}</span>
+        <span class="lbl">Đã hủy</span>
+      </div>
+      <div class="revenue-meta-item">
+        <span class="val">{{ stats.sap_chieu }}</span>
+        <span class="lbl">Sắp chiếu</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI GRID -->
+  <div class="kpi-grid">
+    <div class="kpi-card kpi-gold">
+      <span class="kpi-icon">🎬</span>
+      <div class="kpi-val">{{ stats.total_phim }}<span class="unit">phim</span></div>
+      <div class="kpi-label">Tổng số phim</div>
+    </div>
+    <div class="kpi-card kpi-blue">
+      <span class="kpi-icon">👤</span>
+      <div class="kpi-val">{{ stats.total_kh }}<span class="unit">kh</span></div>
+      <div class="kpi-label">Khách hàng</div>
+    </div>
+    <div class="kpi-card kpi-purple">
+      <span class="kpi-icon">👔</span>
+      <div class="kpi-val">{{ stats.total_nv }}<span class="unit">nv</span></div>
+      <div class="kpi-label">Nhân viên</div>
+    </div>
+    <div class="kpi-card kpi-green">
+      <span class="kpi-icon">▶</span>
+      <div class="kpi-val">{{ stats.dang_chieu }}</div>
+      <div class="kpi-label">Đang chiếu</div>
+    </div>
+    <div class="kpi-card kpi-gold">
+      <span class="kpi-icon">📅</span>
+      <div class="kpi-val">{{ stats.sap_chieu }}</div>
+      <div class="kpi-label">Sắp chiếu</div>
+    </div>
+    <div class="kpi-card kpi-red">
+      <span class="kpi-icon">❌</span>
+      <div class="kpi-val">{{ stats.ve_da_huy }}</div>
+      <div class="kpi-label">Vé đã hủy</div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="dash-grid">
+
+    <!-- LEFT: RECENT TICKETS -->
+    <div class="tickets-section">
+      <div class="section-hd">
+        Vé gần đây
+        <a href="#">Xem tất cả →</a>
+      </div>
+      <div class="card">
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Khách hàng</th>
+                <th>Phim</th>
+                <th>Ngày chiếu</th>
+                <th>Ghế</th>
+                <th>Giá vé</th>
+                <th>Trạng thái</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for v in recent_ves %}
+              <tr>
+                <td><span class="mono">#{{ v.MaVe }}</span></td>
+                <td>
+                  <div style="font-size:.88rem; font-weight:500;">{{ v.HoTen }}</div>
+                  <div style="font-size:.73rem; color:var(--text-muted);">{{ v.NgayMua[:10] if v.NgayMua else '—' }}</div>
+                </td>
+                <td>
+                  <div style="font-size:.85rem; max-width:180px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ v.TenPhim }}</div>
+                  <div class="mono" style="font-size:.7rem;">{{ v.GioChieu }}</div>
+                </td>
+                <td><span class="mono" style="font-size:.8rem;">{{ v.NgayChieu }}</span></td>
+                <td>
+                  <span style="background:var(--bg2); border:1px solid var(--border); padding:.15rem .5rem; border-radius:4px; font-family:'DM Mono',monospace; font-size:.8rem;">
+                    {{ v.SoGhe }}
+                  </span>
+                </td>
+                <td>
+                  <span style="font-family:'DM Mono',monospace; color:var(--gold); font-size:.85rem;">
+                    {{ '{:,.0f}'.format(v.GiaVe) }}đ
+                  </span>
+                </td>
+                <td>
+                  {% if v.TrangThai == 'Da mua' %}
+                    <span class="status-pill pill-mua"><span class="pill-dot"></span>Đã mua</span>
+                  {% elif v.TrangThai == 'Da dung' %}
+                    <span class="status-pill pill-dung"><span class="pill-dot"></span>Đã dùng</span>
+                  {% else %}
+                    <span class="status-pill pill-huy"><span class="pill-dot"></span>Đã hủy</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% else %}
+              <tr>
+                <td colspan="7" style="text-align:center; color:var(--text-muted); padding:2.5rem;">
+                  Chưa có dữ liệu vé
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: SIDEBAR -->
+    <div>
+      <!-- Status Breakdown -->
+      <div class="section-hd">Trạng thái vé</div>
+      <div class="status-breakdown" style="margin-bottom:1.5rem;">
+        <div class="sb-row">
+          <span class="sb-label"><span class="sb-dot" style="background:#3498db;"></span>Đã dùng</span>
+          <span class="sb-val">{{ stats.ve_da_ban }}</span>
+        </div>
+        <div class="sb-row">
+          <span class="sb-label"><span class="sb-dot" style="background:#2ecc71;"></span>Đã mua</span>
+          <span class="sb-val">—</span>
+        </div>
+        <div class="sb-row">
+          <span class="sb-label"><span class="sb-dot" style="background:#e74c3c;"></span>Đã hủy</span>
+          <span class="sb-val">{{ stats.ve_da_huy }}</span>
+        </div>
+        <div class="sb-row" style="margin-top:.5rem; padding-top:.75rem; border-top:1px solid var(--border); font-weight:500;">
+          <span class="sb-label" style="color:var(--text);">Tổng cộng</span>
+          <span class="sb-val" style="color:var(--gold);">{{ stats.ve_da_ban + stats.ve_da_huy }}</span>
+        </div>
+      </div>
+
+      <!-- Quick Links -->
+      <div class="section-hd">Truy cập nhanh</div>
+      <div class="quick-links">
+        <a href="{{ url_for('admin_movies') }}" class="quick-link-card">
+          <div class="ql-icon">🎬</div>
+          <div class="ql-text">
+            <span class="ql-name">Quản lý Phim</span>
+            <span class="ql-desc">Thêm, sửa, xóa phim</span>
+          </div>
+        </a>
+        <a href="{{ url_for('admin_showtimes') }}" class="quick-link-card">
+          <div class="ql-icon">📅</div>
+          <div class="ql-text">
+            <span class="ql-name">Suất chiếu</span>
+            <span class="ql-desc">Lập lịch chiếu phim</span>
+          </div>
+        </a>
+        <a href="{{ url_for('index') }}" class="quick-link-card">
+          <div class="ql-icon">🏠</div>
+          <div class="ql-text">
+            <span class="ql-name">Trang khách hàng</span>
+            <span class="ql-desc">Xem giao diện người dùng</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

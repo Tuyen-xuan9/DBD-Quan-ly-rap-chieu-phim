@@ -1,0 +1,588 @@
+{% extends "base.html" %}
+{% block title %}Đặt vé — {{ suat.TenPhim }}{% endblock %}
+
+{% block head %}
+<style>
+    .booking-layout {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 2rem;
+        padding: 2.5rem 0 3rem;
+        align-items: start;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        color: var(--text-muted);
+        text-decoration: none;
+        font-size: 0.82rem;
+        margin-bottom: 1.5rem;
+        transition: color 0.18s;
+    }
+
+    .back-link:hover {
+        color: var(--gold);
+    }
+
+    /* ── SCREEN + SEATS ── */
+    .seat-section {}
+
+    .screen-bar {
+        background: linear-gradient(180deg, rgba(201, 168, 76, 0.2) 0%, transparent 100%);
+        border: 1px solid rgba(201, 168, 76, 0.3);
+        border-bottom: none;
+        border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+        text-align: center;
+        padding: 0.6rem;
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        color: var(--gold);
+        margin-bottom: 0.1rem;
+    }
+
+    .seats-container {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+        padding: 1.5rem 1rem 1rem;
+        margin-bottom: 1.5rem;
+        overflow-x: auto;
+    }
+
+    .seats-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        min-width: fit-content;
+        margin: 0 auto;
+    }
+
+    .seat-row {
+        display: flex;
+        gap: 0.4rem;
+        align-items: center;
+    }
+
+    .row-label {
+        width: 22px;
+        font-size: 0.68rem;
+        font-weight: 600;
+        color: var(--text-dim);
+        text-align: center;
+        flex-shrink: 0;
+        font-family: 'DM Mono', monospace;
+    }
+
+    .seat-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 6px 6px 4px 4px;
+        border: 1px solid;
+        font-size: 0.65rem;
+        font-weight: 600;
+        font-family: 'DM Mono', monospace;
+        cursor: pointer;
+        transition: all 0.15s;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Ghế trống thường */
+    .seat-empty {
+        background: rgba(39, 174, 96, 0.08);
+        border-color: rgba(39, 174, 96, 0.35);
+        color: #2ecc71;
+    }
+
+    .seat-empty:hover {
+        background: rgba(39, 174, 96, 0.25);
+        border-color: #2ecc71;
+        transform: scale(1.08);
+    }
+
+    /* Ghế VIP trống */
+    .seat-vip {
+        background: rgba(201, 168, 76, 0.1);
+        border-color: rgba(201, 168, 76, 0.4);
+        color: var(--gold);
+    }
+
+    .seat-vip:hover {
+        background: rgba(201, 168, 76, 0.25);
+        border-color: var(--gold);
+        transform: scale(1.08);
+    }
+
+    /* Ghế đã đặt */
+    .seat-taken {
+        background: rgba(192, 57, 43, 0.08);
+        border-color: rgba(192, 57, 43, 0.25);
+        color: var(--text-dim);
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+
+    /* Ghế được chọn */
+    .seat-selected {
+        background: var(--gold) !important;
+        border-color: var(--gold) !important;
+        color: #0a0a0a !important;
+        transform: scale(1.08);
+        box-shadow: 0 0 12px rgba(201, 168, 76, 0.4);
+    }
+
+    /* ── LEGEND ── */
+    .legend {
+        display: flex;
+        gap: 1.25rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.5rem;
+        padding: 0 0.5rem;
+    }
+
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.45rem;
+        font-size: 0.76rem;
+        color: var(--text-muted);
+    }
+
+    .legend-dot {
+        width: 14px;
+        height: 14px;
+        border-radius: 3px;
+        border: 1px solid;
+    }
+
+    .dot-empty {
+        background: rgba(39, 174, 96, 0.15);
+        border-color: rgba(39, 174, 96, 0.5);
+    }
+
+    .dot-vip {
+        background: rgba(201, 168, 76, 0.15);
+        border-color: rgba(201, 168, 76, 0.5);
+    }
+
+    .dot-taken {
+        background: rgba(192, 57, 43, 0.08);
+        border-color: rgba(192, 57, 43, 0.25);
+        opacity: 0.5;
+    }
+
+    .dot-chosen {
+        background: var(--gold);
+        border-color: var(--gold);
+    }
+
+    /* ── BOOKING SUMMARY ── */
+    .booking-summary {
+        position: sticky;
+        top: 80px;
+    }
+
+    .summary-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+    }
+
+    .summary-header {
+        padding: 1.1rem 1.4rem;
+        border-bottom: 1px solid var(--border);
+        background: var(--bg2);
+    }
+
+    .summary-header h3 {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.1rem;
+        color: var(--text);
+    }
+
+    .summary-body {
+        padding: 1.4rem;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        padding: 0.6rem 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        font-size: 0.85rem;
+    }
+
+    .summary-row:last-of-type {
+        border-bottom: none;
+    }
+
+    .summary-key {
+        color: var(--text-muted);
+    }
+
+    .summary-val {
+        color: var(--text);
+        text-align: right;
+        max-width: 60%;
+    }
+
+    .divider {
+        height: 1px;
+        background: var(--border);
+        margin: 1rem 0;
+    }
+
+    .price-total {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem 0;
+    }
+
+    .price-label {
+        font-size: 0.8rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+    }
+
+    .price-val {
+        font-family: 'Playfair Display', serif;
+        font-size: 1.6rem;
+        color: var(--gold);
+        font-style: italic;
+    }
+
+    .price-val small {
+        font-size: 0.9rem;
+        font-style: normal;
+        font-family: 'DM Sans', sans-serif;
+    }
+
+    .seat-display {
+        background: var(--bg2);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 0.5rem 0.75rem;
+        font-family: 'DM Mono', monospace;
+        font-size: 0.85rem;
+        color: var(--gold);
+        text-align: center;
+        margin: 0.75rem 0;
+    }
+
+    .seat-display.empty {
+        color: var(--text-dim);
+        font-style: italic;
+        font-family: 'DM Sans', sans-serif;
+        font-size: 0.8rem;
+    }
+
+    .bonus-note {
+        background: rgba(39, 174, 96, 0.08);
+        border: 1px solid rgba(39, 174, 96, 0.2);
+        border-radius: var(--radius);
+        padding: 0.6rem 0.9rem;
+        font-size: 0.78rem;
+        color: #2ecc71;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+
+    /* ── MODAL CONFIRM ── */
+    .confirm-modal .modal {
+        max-width: 420px;
+    }
+
+    @media (max-width: 900px) {
+        .booking-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .booking-summary {
+            position: static;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <a href="{{ url_for('movie_detail', ma_phim=suat.MaPhim) }}" class="back-link">← Quay lại chi tiết phim</a>
+
+    <div class="booking-layout">
+        <!-- LEFT: SEAT MAP -->
+        <div class="seat-section">
+            <!-- Movie info bar -->
+            <div class="card" style="margin-bottom:1.5rem;">
+                <div class="card-body">
+                    <div
+                        style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:1rem;">
+                        <div>
+                            <div
+                                style="font-size:0.72rem; color:var(--text-muted); letter-spacing:.08em; text-transform:uppercase; margin-bottom:.3rem;">
+                                Phim đang chọn</div>
+                            <div style="font-family:'Playfair Display',serif; font-size:1.2rem;">{{ suat.TenPhim }}
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:1.5rem; text-align:center; flex-wrap:wrap;">
+                            <div>
+                                <div class="mono">{{ suat.NgayChieu }}</div>
+                                <div style="font-size:0.7rem; color:var(--text-muted); margin-top:.2rem;">Ngày chiếu
+                                </div>
+                            </div>
+                            <div>
+                                <div class="mono">{{ suat.GioChieu }}</div>
+                                <div style="font-size:0.7rem; color:var(--text-muted); margin-top:.2rem;">Giờ chiếu
+                                </div>
+                            </div>
+                            <div>
+                                <div class="mono">{{ suat.TenPhong }}</div>
+                                <div style="font-size:0.7rem; color:var(--text-muted); margin-top:.2rem;">{{ suat.TenRap
+                                    }}</div>
+                            </div>
+                            <div>
+                                <span class="badge badge-gray">{{ suat.LoaiPhong }}</span>
+                                <span
+                                    class="badge {% if suat.XepHang == 'C18' %}badge-red{% elif suat.XepHang == 'P' %}badge-green{% else %}badge-blue{% endif %}"
+                                    style="margin-left:.3rem;">{{ suat.XepHang }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SCREEN -->
+            <div class="screen-bar">🎬 MÀN HÌNH CHIẾU</div>
+            <div class="seats-container">
+                {% set rows = [] %}
+                {% for g in ghes %}
+                {% set row = g.SoGhe[0] %}
+                {% if row not in rows %}{% set _ = rows.append(row) %}{% endif %}
+                {% endfor %}
+
+                <div class="seats-grid">
+                    {% for row in rows %}
+                    <div class="seat-row">
+                        <div class="row-label">{{ row }}</div>
+                        {% for g in ghes if g.SoGhe[0] == row %}
+                        {% set taken = g.DaDat == 1 %}
+                        <button
+                            class="seat-btn {% if taken %}seat-taken{% elif g.LoaiGhe == 'VIP' %}seat-vip{% else %}seat-empty{% endif %}"
+                            {% if not taken
+                            %}onclick="selectSeat(this, {{ g.MaGhe }}, '{{ g.SoGhe }}', '{{ g.LoaiGhe }}')" {% endif %}
+                            title="{{ g.SoGhe }} — {{ g.LoaiGhe }}{% if taken %} (Đã đặt){% endif %}"
+                            data-id="{{ g.MaGhe }}" data-so="{{ g.SoGhe }}" data-loai="{{ g.LoaiGhe }}" {% if taken
+                            %}disabled{% endif %}>{{ g.SoGhe[1:] }}</button>
+                        {% endfor %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- LEGEND -->
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-dot dot-empty"></div>Thường - Trống
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot dot-vip"></div>VIP - Trống
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot dot-taken"></div>Đã đặt
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot dot-chosen"></div>Đang chọn
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: SUMMARY -->
+        <div class="booking-summary">
+            <div class="summary-card">
+                <div class="summary-header">
+                    <h3>Thông tin đặt vé</h3>
+                </div>
+                <div class="summary-body">
+                    <div class="summary-row">
+                        <span class="summary-key">Phim</span>
+                        <span class="summary-val">{{ suat.TenPhim }}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-key">Suất chiếu</span>
+                        <span class="summary-val">{{ suat.NgayChieu }} · {{ suat.GioChieu }}</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-key">Phòng chiếu</span>
+                        <span class="summary-val">{{ suat.TenPhong }}, {{ suat.TenRap }}</span>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <!-- Seat display -->
+                    <div
+                        style="font-size:0.72rem; color:var(--text-muted); letter-spacing:.06em; text-transform:uppercase; margin-bottom:.4rem;">
+                        Ghế đã chọn</div>
+                    <div class="seat-display empty" id="selectedSeatDisplay">Chưa chọn ghế</div>
+
+                    <div class="divider"></div>
+
+                    <!-- Customer select -->
+                    <div class="form-group">
+                        <label class="form-label">Khách hàng</label>
+                        <select class="form-control" id="selectKH">
+                            <option value="">— Chọn khách hàng —</option>
+                            {% for kh in khach_hangs %}
+                            <option value="{{ kh.MaKH }}">{{ kh.HoTen }} ({{ kh.SoDT }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="price-total">
+                        <span class="price-label">Tổng tiền</span>
+                        <span class="price-val" id="priceDisplay">
+                            {{ '{:,.0f}'.format(suat.GiaVe) }}<small>đ</small>
+                        </span>
+                    </div>
+
+                    <div class="bonus-note">🎁 Đặt vé nhận ngay +10 điểm tích lũy</div>
+
+                    <button class="btn btn-gold" style="width:100%; justify-content:center; padding:.75rem;"
+                        onclick="openConfirm()" id="btnConfirm" disabled>
+                        Xác nhận đặt vé →
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="modal-overlay confirm-modal" id="confirmModal">
+    <div class="modal">
+        <div class="modal-title">Xác nhận đặt vé</div>
+        <div style="font-size:.85rem; color:var(--text-muted); margin-bottom:1.5rem;">
+            Vui lòng kiểm tra lại thông tin trước khi xác nhận.
+        </div>
+        <div class="summary-row"><span class="summary-key">Phim</span><span class="summary-val">{{ suat.TenPhim
+                }}</span></div>
+        <div class="summary-row"><span class="summary-key">Ngày · Giờ</span><span class="summary-val">{{ suat.NgayChieu
+                }} · {{ suat.GioChieu }}</span></div>
+        <div class="summary-row"><span class="summary-key">Phòng</span><span class="summary-val">{{ suat.TenPhong
+                }}</span></div>
+        <div class="summary-row"><span class="summary-key">Ghế</span><span class="summary-val" id="confirmSeat">—</span>
+        </div>
+        <div class="summary-row"><span class="summary-key">Khách hàng</span><span class="summary-val"
+                id="confirmKH">—</span></div>
+        <div class="divider"></div>
+        <div class="price-total">
+            <span class="price-label">Tổng tiền</span>
+            <span class="price-val">{{ '{:,.0f}'.format(suat.GiaVe) }}<small>đ</small></span>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-ghost" onclick="closeConfirm()">Hủy</button>
+            <button class="btn btn-gold" id="btnFinalConfirm" onclick="finalConfirm()">Đặt vé ngay</button>
+        </div>
+    </div>
+</div>
+
+<!-- SUCCESS MODAL -->
+<div class="modal-overlay" id="successModal">
+    <div class="modal" style="text-align:center; max-width:380px;">
+        <div style="font-size:3rem; margin-bottom:1rem;">🎟️</div>
+        <div class="modal-title" style="text-align:center;">Đặt vé thành công!</div>
+        <p style="color:var(--text-muted); font-size:.9rem; margin-bottom:1.5rem;" id="successMsg">
+            Vé của bạn đã được xác nhận. Chúc bạn xem phim vui vẻ!
+        </p>
+        <div style="display:flex; gap:.75rem; justify-content:center; flex-wrap:wrap;">
+            <a href="{{ url_for('index') }}" class="btn btn-outline">Về trang chủ</a>
+            <a href="{{ url_for('movie_detail', ma_phim=suat.MaPhim) }}" class="btn btn-gold">Xem thêm phim</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    const SUAT_ID = {{ suat.MaSuat }};
+    let selectedGheId = null;
+    let selectedGheName = null;
+
+    function selectSeat(el, gheId, soGhe, loaiGhe) {
+        // Bỏ chọn cũ
+        document.querySelectorAll('.seat-selected').forEach(b => {
+            b.classList.remove('seat-selected');
+        });
+
+        el.classList.add('seat-selected');
+        selectedGheId = gheId;
+        selectedGheName = soGhe;
+
+        const display = document.getElementById('selectedSeatDisplay');
+        display.textContent = `${soGhe} (${loaiGhe})`;
+        display.classList.remove('empty');
+
+        updateConfirmBtn();
+    }
+
+    function updateConfirmBtn() {
+        const khVal = document.getElementById('selectKH').value;
+        document.getElementById('btnConfirm').disabled = !(selectedGheId && khVal);
+    }
+
+    document.getElementById('selectKH').addEventListener('change', updateConfirmBtn);
+
+    function openConfirm() {
+        if (!selectedGheId) { alert('Vui lòng chọn ghế!'); return; }
+        const khSel = document.getElementById('selectKH');
+        if (!khSel.value) { alert('Vui lòng chọn khách hàng!'); return; }
+
+        document.getElementById('confirmSeat').textContent = selectedGheName;
+        document.getElementById('confirmKH').textContent = khSel.options[khSel.selectedIndex].text;
+        document.getElementById('confirmModal').classList.add('active');
+    }
+
+    function closeConfirm() {
+        document.getElementById('confirmModal').classList.remove('active');
+    }
+
+    async function finalConfirm() {
+        const khVal = document.getElementById('selectKH').value;
+        document.getElementById('btnFinalConfirm').disabled = true;
+        document.getElementById('btnFinalConfirm').textContent = 'Đang xử lý...';
+
+        const formData = new FormData();
+        formData.append('ma_suat', SUAT_ID);
+        formData.append('ma_ghe', selectedGheId);
+        formData.append('ma_kh', khVal);
+
+        try {
+            const res = await fetch('/dat-ve/xac-nhan', { method: 'POST', body: formData });
+            const data = await res.json();
+
+            closeConfirm();
+
+            if (data.ok) {
+                document.getElementById('successMsg').textContent = data.msg;
+                document.getElementById('successModal').classList.add('active');
+            } else {
+                alert('❌ ' + data.msg);
+            }
+        } catch (e) {
+            alert('Có lỗi xảy ra. Vui lòng thử lại.');
+        }
+
+        document.getElementById('btnFinalConfirm').disabled = false;
+        document.getElementById('btnFinalConfirm').textContent = 'Đặt vé ngay';
+    }
+</script>
+{% endblock %}
