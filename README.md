@@ -8,6 +8,7 @@
 
 ## Cấu trúc thư mục
 Quan-ly-rap-chieu-phim-DBD/
+
 ├── static/   # Chứa file CSS, hình ảnh UI
 
 ├── templates/           # Giao diện HTML 
