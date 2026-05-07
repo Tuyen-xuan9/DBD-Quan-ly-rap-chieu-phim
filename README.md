@@ -3,13 +3,13 @@
 ## Công nghệ sử dụng
 - Database: SQLite 3
 - Backend: Python, Flask Framework
-- Frontend: HTML5, CSS3 (Modern Dark Theme), Jinja2
-- Tools: Draw.io (ERD), VS Code, GitHub
+- Frontend: HTML5, Jinja2
+- Tools: Draw.io (ERD), VS Code
 
 ## Cấu trúc thư mục
 Quan-ly-rap-chieu-phim-DBD/
 
-├── static/   # Chứa file CSS, hình ảnh UI
+├── _pycache_
 
 ├── templates/           # Giao diện HTML 
 
