@@ -1,27 +1,30 @@
 # Hệ Thống Quản Lý Rạp Chiếu Phim
 
-## Công nghệ sử dụng
-- Database: SQLite 3
-- Backend: Python, Flask Framework
-- Frontend: HTML5, Jinja2
-- Tools: Draw.io (ERD), VS Code
+Một ứng dụng web nhỏ gọn giúp quản lý rạp chiếu phim, được xây dựng bằng Python, Flask và SQLite 3. Dự án này phù hợp cho việc học tập, thực hành thao tác với cơ sở dữ liệu và xây dựng ứng dụng web cơ bản.
 
-## Cấu trúc thư mục
+---
+
+## 🛠️ Công Nghệ Sử Dụng
+
+| Thành phần | Công nghệ / Công cụ |
+| :--- | :--- |
+| **Backend** | Python, Flask Framework |
+| **Database** | SQLite 3 |
+| **Frontend** | HTML5, CSS3, Jinja2 Template Engine |
+| **Tools** | VS Code, Draw.io (Thiết kế sơ đồ ERD) |
+
+---
+
+## 📂 Cấu Trúc Thư Mục
+
+```text
 Quan-ly-rap-chieu-phim-DBD/
-
-├── _pycache_
-
-├── templates/           # Giao diện HTML 
-
-├── app.py               # Xử lý Logic Backend
-
-├── database.py          # Kết nối và thao tác SQLite
-
-├── schema.sql           # Script khởi tạo cấu trúc DB
-
-├── cinema.db            # File Database SQLite (tự động tạo)
-
-└── README.md            # Tài liệu hướng dẫn
+├── templates/          # Giao diện HTML (Jinja2 templates)
+├── app.py              # File chạy chính, xử lý Logic Backend & Routes
+├── database.py         # Cấu hình kết nối và các hàm thao tác với SQLite
+├── schema.sql          # Script SQL khởi tạo cấu trúc các bảng Database
+├── cinema.db           # File Database SQLite (tự động tạo sau khi chạy)
+└── README.md           # Tài liệu hướng dẫn sử dụng
 
 ## Hướng dẫn chạy
 - Tải dự án về 
