@@ -15,7 +15,6 @@ Một ứng dụng web nhỏ gọn giúp quản lý rạp chiếu phim, được
 
 ## 📂 Cấu Trúc Thư Mục
 
-```text
 Quan-ly-rap-chieu-phim-DBD/
 ├── templates/          # Giao diện HTML (Jinja2 templates)
 ├── app.py              # File chạy chính, xử lý Logic Backend & Routes
