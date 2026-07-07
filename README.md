@@ -14,7 +14,7 @@ Một ứng dụng web nhỏ gọn giúp quản lý rạp chiếu phim, được
 
 
 ## Cấu Trúc Thư Mục
-"""
+```text
 Quan-ly-rap-chieu-phim-DBD/
 ├── templates/          # Giao diện HTML (Jinja2 templates)
 ├── app.py              # File chạy chính, xử lý Logic Backend & Routes
@@ -22,7 +22,7 @@ Quan-ly-rap-chieu-phim-DBD/
 ├── schema.sql          # Script SQL khởi tạo cấu trúc các bảng Database
 ├── cinema.db           # File Database SQLite (tự động tạo sau khi chạy)
 └── README.md           # Tài liệu hướng dẫn sử dụng
-"""
+---
 
 ## Hướng dẫn chạy
 - Tải dự án về 
