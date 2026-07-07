@@ -1,1 +1,11 @@
+# Bỏ qua thư mục cache của Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
 
+# Bỏ qua file database SQLite (nếu bạn muốn người khác tự tạo db mới, không ghi đè dữ liệu cá nhân của bạn lên GitHub)
+cinema.db
+
+# Bỏ qua file cấu hình của VS Code (nếu có)
+.vscode/
