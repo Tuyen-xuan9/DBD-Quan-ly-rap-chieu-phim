@@ -22,7 +22,7 @@ Quan-ly-rap-chieu-phim-DBD/
 ├── schema.sql          # Script SQL khởi tạo cấu trúc các bảng Database
 ├── cinema.db           # File Database SQLite (tự động tạo sau khi chạy)
 └── README.md           # Tài liệu hướng dẫn sử dụng
----
+```
 
 ## Hướng dẫn chạy
 - Tải dự án về 
